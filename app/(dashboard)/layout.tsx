@@ -1,14 +1,15 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
-// Force dynamic rendering - dashboard requires auth and user data
-export const dynamic = "force-dynamic";
-
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Force dynamic rendering by reading cookies (auth check)
+  await cookies();
+
   return (
     <Suspense fallback={<DashboardSkeleton />}>
       <DashboardShell>{children}</DashboardShell>
