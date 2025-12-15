@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Settings,
@@ -69,6 +70,7 @@ function formatAction(action: ActivityType): string {
 }
 
 export default async function ActivityPage() {
+  await connection();
   const logs = await getActivityLogs();
 
   return (
