@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
+import { SWRProvider } from "@/components/dashboard/swr-provider";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { getUser, getTeamForUser } from "@/lib/db/queries";
 
 export default async function DashboardLayout({
   children,
@@ -12,7 +14,14 @@ export default async function DashboardLayout({
 
   return (
     <Suspense fallback={<DashboardSkeleton />}>
-      <DashboardShell>{children}</DashboardShell>
+      <SWRProvider
+        fallback={{
+          "/api/user": getUser(),
+          "/api/team": getTeamForUser(),
+        }}
+      >
+        <DashboardShell>{children}</DashboardShell>
+      </SWRProvider>
     </Suspense>
   );
 }
