@@ -15,14 +15,17 @@ import Link from "next/link";
 type Price = {
   id: string;
   productId: string;
-  unitAmount: number;
-  interval: string;
+  unitAmount: number | null;
+  currency: string;
+  interval: string | undefined;
+  trialPeriodDays: number | null | undefined;
 };
 
 type Product = {
   id: string;
   name: string;
-  description?: string;
+  description: string | null;
+  defaultPriceId: string | undefined;
 };
 
 export const Pricing = ({ prices = [], products = [] }: { prices?: Price[], products?: Product[] }) => {
@@ -43,8 +46,8 @@ export const Pricing = ({ prices = [], products = [] }: { prices?: Price[], prod
       return {
         title: product.name,
         subtitle: product.description || defaultTiers[idx]?.subtitle || "",
-        monthly: monthlyPrice ? monthlyPrice.unitAmount / 100 : 0,
-        yearly: yearlyPrice ? yearlyPrice.unitAmount / 100 : 0,
+        monthly: monthlyPrice?.unitAmount ? monthlyPrice.unitAmount / 100 : 0,
+        yearly: yearlyPrice?.unitAmount ? yearlyPrice.unitAmount / 100 : 0,
         ctaText: "Start building",
         ctaLink: monthlyPrice ? `/sign-up?priceId=${monthlyPrice.id}` : "/sign-up",
         features: defaultTiers[idx]?.features || [],

@@ -1,106 +1,208 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { use, useState, Suspense } from 'react';
-import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut } from 'lucide-react';
+import { useState } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "motion/react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { signOut } from '@/app/(login)/actions';
-import { useRouter } from 'next/navigation';
-import { User } from '@/lib/db/schema';
-import useSWR, { mutate } from 'swr';
+  IconUsers,
+  IconSettings,
+  IconShield,
+  IconActivity,
+  IconCreditCard,
+  IconHome,
+} from "@tabler/icons-react";
+import {
+  Sidebar,
+  SidebarBody,
+  SidebarLink,
+} from "@/components/ui/collapsible-sidebar";
+import { ModeToggle } from "@/components/marketing/mode-toggle";
+import { NavUser } from "@/components/dashboard/nav-user";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const accountLinks = [
+  {
+    label: "Team Settings",
+    href: "/dashboard",
+    icon: (
+      <IconUsers className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+    ),
+  },
+  {
+    label: "General",
+    href: "/dashboard/general",
+    icon: (
+      <IconSettings className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+    ),
+  },
+  {
+    label: "Security",
+    href: "/dashboard/security",
+    icon: (
+      <IconShield className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+    ),
+  },
+  {
+    label: "Activity",
+    href: "/dashboard/activity",
+    icon: (
+      <IconActivity className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+    ),
+  },
+];
 
-function UserMenu() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data: user } = useSWR<User>('/api/user', fetcher);
-  const router = useRouter();
+const billingLinks = [
+  {
+    label: "Subscription",
+    href: "/subscription",
+    icon: (
+      <IconCreditCard className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+    ),
+  },
+];
 
-  async function handleSignOut() {
-    await signOut();
-    mutate('/api/user');
-    router.push('/');
-  }
+const otherLinks = [
+  {
+    label: "Back to Home",
+    href: "/",
+    icon: (
+      <IconHome className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+    ),
+  },
+];
 
-  if (!user) {
-    return (
-      <>
-        <Link
-          href="/pricing"
-          className="text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
-          Pricing
-        </Link>
-        <Button asChild className="rounded-full">
-          <Link href="/sign-up">Sign Up</Link>
-        </Button>
-      </>
-    );
-  }
-
+function Logo({ open }: { open: boolean }) {
   return (
-    <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-      <DropdownMenuTrigger>
-        <Avatar className="cursor-pointer size-9">
-          <AvatarImage alt={user.name || ''} />
-          <AvatarFallback>
-            {user.email
-              .split(' ')
-              .map((n) => n[0])
-              .join('')}
-          </AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="flex flex-col gap-1">
-        <DropdownMenuItem className="cursor-pointer">
-          <Link href="/dashboard" className="flex w-full items-center">
-            <Home className="mr-2 h-4 w-4" />
-            <span>Dashboard</span>
-          </Link>
-        </DropdownMenuItem>
-        <form action={handleSignOut} className="w-full">
-          <button type="submit" className="flex w-full">
-            <DropdownMenuItem className="w-full flex-1 cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Sign out</span>
-            </DropdownMenuItem>
-          </button>
-        </form>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Link
+      href="/"
+      className="relative z-20 flex items-center space-x-2 px-2 py-1 text-sm font-normal"
+    >
+      {open ? (
+        <>
+          <Image
+            src="/logo-white.svg"
+            alt="Arclen"
+            width={90}
+            height={24}
+            className="hidden dark:block"
+          />
+          <Image
+            src="/logo-black.svg"
+            alt="Arclen"
+            width={90}
+            height={24}
+            className="block dark:hidden"
+          />
+        </>
+      ) : (
+        <>
+          <Image
+            src="/favicon-white-180x180.svg"
+            alt="Arclen"
+            width={24}
+            height={24}
+            className="hidden dark:block"
+          />
+          <Image
+            src="/favicon-black-180x180.svg"
+            alt="Arclen"
+            width={24}
+            height={24}
+            className="block dark:hidden"
+          />
+        </>
+      )}
+    </Link>
   );
 }
 
-function Header() {
+function SidebarLabel({ children, open }: { children: React.ReactNode; open: boolean }) {
+  if (!open) return null;
   return (
-    <header className="border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <Link href="/" className="flex items-center">
-          <CircleIcon className="h-6 w-6 text-orange-500" />
-          <span className="ml-2 text-xl font-semibold text-gray-900">ACME</span>
-        </Link>
-        <div className="flex items-center space-x-4">
-          <Suspense fallback={<div className="h-9" />}>
-            <UserMenu />
-          </Suspense>
+    <motion.span
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="px-2 text-xs font-medium text-neutral-500 dark:text-neutral-400"
+    >
+      {children}
+    </motion.span>
+  );
+}
+
+function DashboardSidebar() {
+  const [open, setOpen] = useState(true);
+  const pathname = usePathname();
+
+  return (
+    <Sidebar open={open} setOpen={setOpen}>
+      <SidebarBody className="justify-between gap-10">
+        <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+          <Logo open={open} />
+
+          <div className="mt-8 flex flex-col gap-1">
+            <SidebarLabel open={open}>Account</SidebarLabel>
+            {accountLinks.map((link, idx) => (
+              <SidebarLink
+                key={idx}
+                link={link}
+                active={pathname === link.href}
+              />
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-col gap-1">
+            <SidebarLabel open={open}>Billing</SidebarLabel>
+            {billingLinks.map((link, idx) => (
+              <SidebarLink
+                key={idx}
+                link={link}
+                active={pathname === link.href}
+              />
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <div className="h-px w-full bg-neutral-200 dark:bg-neutral-700" />
+          </div>
+
+          <div className="mt-4 flex flex-col gap-1">
+            {otherLinks.map((link, idx) => (
+              <SidebarLink
+                key={idx}
+                link={link}
+                active={pathname === link.href}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <NavUser />
+        </div>
+      </SidebarBody>
+    </Sidebar>
+  );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-gray-100 md:flex-row dark:bg-neutral-800">
+      <DashboardSidebar />
+      <div className="m-2 flex flex-1 flex-col overflow-hidden">
+        <div className="flex h-full w-full flex-1 flex-col rounded-2xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+          <header className="flex h-14 shrink-0 items-center justify-end border-b border-neutral-200 px-4 dark:border-neutral-700">
+            <ModeToggle />
+          </header>
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            {children}
+          </main>
         </div>
       </div>
-    </header>
-  );
-}
-
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col min-h-screen">
-      <Header />
-      {children}
-    </section>
+    </div>
   );
 }

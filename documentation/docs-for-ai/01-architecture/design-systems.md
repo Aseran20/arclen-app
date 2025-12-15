@@ -277,41 +277,145 @@ import { Button } from "@/components/ui/button";
 
 ### Composants custom (components/dashboard/)
 
-#### UserButton
-[components/dashboard/user-button.tsx](../../../components/dashboard/user-button.tsx)
+#### Collapsible Sidebar (Aceternity)
+[components/ui/collapsible-sidebar.tsx](../../../components/ui/collapsible-sidebar.tsx)
+
+Le dashboard utilise un **sidebar Aceternity** avec animations Motion (pas shadcn).
+
+**Exports** :
+- `Sidebar`, `SidebarBody` - Container principal
+- `SidebarProvider`, `useSidebar` - Context pour état open/closed
+- `SidebarLink` - Lien avec animation de label
+- `DesktopSidebar`, `MobileSidebar` - Versions responsive
 
 **Features** :
-- Avatar utilisateur
-- Dropdown menu (Settings, Logout)
+- Animation width (300px ↔ 70px) avec Motion
+- Bouton collapse (flèche) apparaît au hover
+- Labels animés (opacity fade)
+- Mobile : drawer plein écran
+
+---
+
+#### Dashboard Layout
+[app/(dashboard)/layout.tsx](../../../app/(dashboard)/layout.tsx)
+
+**Features** :
+- Logo dynamique : logo complet quand open, favicon quand collapsed
+- Navigation groupée (Account, Billing, Other)
+- Section labels qui disparaissent quand collapsed
+- NavUser en footer de sidebar
+
+**Structure** :
+```typescript
+function DashboardSidebar() {
+  const [open, setOpen] = useState(true);
+  const pathname = usePathname();
+
+  return (
+    <Sidebar open={open} setOpen={setOpen}>
+      <SidebarBody className="justify-between gap-10">
+        <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+          <Logo open={open} />  {/* Logo complet ou favicon selon état */}
+
+          <div className="mt-8 flex flex-col gap-1">
+            <SidebarLabel open={open}>Account</SidebarLabel>
+            {accountLinks.map((link) => (
+              <SidebarLink link={link} active={pathname === link.href} />
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-col gap-1">
+            <SidebarLabel open={open}>Billing</SidebarLabel>
+            {billingLinks.map((link) => (
+              <SidebarLink link={link} active={pathname === link.href} />
+            ))}
+          </div>
+        </div>
+
+        <NavUser />
+      </SidebarBody>
+    </Sidebar>
+  );
+}
+```
+
+**Logo dynamique** :
+```typescript
+function Logo({ open }: { open: boolean }) {
+  return (
+    <Link href="/">
+      {open ? (
+        <Image src="/logo-white.svg" ... />  {/* Logo complet */}
+      ) : (
+        <Image src="/favicon-white-180x180.svg" ... />  {/* Favicon seulement */}
+      )}
+    </Link>
+  );
+}
+```
+
+---
+
+#### NavUser
+[components/dashboard/nav-user.tsx](../../../components/dashboard/nav-user.tsx)
+
+**Features** :
+- Avatar utilisateur avec initiales
+- Dropdown menu (Account, Settings, Logout)
 - SWR data fetching
+- Adapte affichage selon état sidebar (open/closed)
 
 **Pattern** :
 ```typescript
 import useSWR from "swr";
+import { useSidebar } from "@/components/ui/collapsible-sidebar";
 
-export const UserButton = () => {
-  const { data: user, error, isLoading } = useSWR("/api/user", fetcher);
-
-  if (isLoading) return <Skeleton />;
-  if (error) return null;
+export function NavUser() {
+  const { open } = useSidebar();
+  const { data: user } = useSWR<User>("/api/user", fetcher);
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Avatar>
-          <AvatarFallback>{user.name[0]}</AvatarFallback>
-        </Avatar>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 ...">
+          <Avatar>
+            <AvatarFallback>{getUserInitials()}</AvatarFallback>
+          </Avatar>
+          {open && (
+            <>
+              <div className="grid flex-1 text-left">
+                <span>{user.name}</span>
+                <span className="text-xs">{user.email}</span>
+              </div>
+              <ChevronsUpDown />
+            </>
+          )}
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent side="right" align="end">
+        <DropdownMenuItem>Account</DropdownMenuItem>
         <DropdownMenuItem>Settings</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+}
 ```
 
-**Important** : TOUJOURS wrapper dans Suspense quand utilisé dans Navbar (Cache Components)
+---
+
+### Couleurs Dashboard (CSS Variables)
+
+**Convention** : Utiliser les variables CSS shadcn, pas de couleurs hardcodées.
+
+| Usage | Classe | Éviter |
+|-------|--------|--------|
+| Bouton primaire | `bg-primary text-primary-foreground` | `bg-orange-500 text-white` |
+| Hover primaire | `hover:bg-primary/90` | `hover:bg-orange-600` |
+| Fond accent léger | `bg-primary/10` | `bg-orange-100` |
+| Texte principal | (rien, utilise foreground) | `text-gray-900` |
+| Texte secondaire | `text-muted-foreground` | `text-gray-500` |
+| Bouton destructif | `variant="destructive"` | `bg-red-600` |
 
 ---
 

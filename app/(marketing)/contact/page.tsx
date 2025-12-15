@@ -1,20 +1,18 @@
-import { Contact } from "@/components/marketing/contact";
+import { ContactFormGridWithDetails } from "@/components/marketing/contact-form-grid";
 import { DivideX } from "@/components/marketing/divide";
-import { SignUp } from "@/components/marketing/sign-up";
-
 import { getSEOTags } from "@/lib/seo";
 
 export const metadata = getSEOTags({
-  title: "Sign Up | Nodus",
+  title: "Contact | Arclen",
   description:
-    "Sign up for Nodus and start building your own autonomous agents today.",
+    "Get in touch with the Arclen team. We're here to help with your AI-powered Office add-ins needs.",
 });
 
-export default function SignupPage() {
+export default function ContactPage() {
   return (
     <main>
       <DivideX />
-      <Contact />
+      <ContactFormGridWithDetails />
       <DivideX />
     </main>
   );

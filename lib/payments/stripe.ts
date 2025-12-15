@@ -170,13 +170,16 @@ export async function getStripeProducts() {
     expand: ['data.default_price']
   });
 
-  return products.data.map((product) => ({
-    id: product.id,
-    name: product.name,
-    description: product.description,
-    defaultPriceId:
-      typeof product.default_price === 'string'
-        ? product.default_price
-        : product.default_price?.id
-  }));
+  return products.data
+    // Filter out Stripe CLI test products
+    .filter((product) => !product.name.includes('created by Stripe CLI'))
+    .map((product) => ({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      defaultPriceId:
+        typeof product.default_price === 'string'
+          ? product.default_price
+          : product.default_price?.id
+    }));
 }

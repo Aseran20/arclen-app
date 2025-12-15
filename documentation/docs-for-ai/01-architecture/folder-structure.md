@@ -32,6 +32,10 @@ arclen-app/
 │   │   ├── settings/             # Paramètres utilisateur
 │   │   └── layout.tsx            # Layout dashboard avec sidebar
 │   │
+│   ├── (docs)/                   # 📚 Documentation publique
+│   │   ├── docs/                 # Pages docs (/docs, /docs/quick-start, etc.)
+│   │   └── layout.tsx            # Layout docs avec sidebar
+│   │
 │   ├── api/                      # 🔌 API Routes
 │   │   ├── auth/                 # Endpoints auth (sign-in, sign-up, logout)
 │   │   ├── webhooks/             # Webhooks (Stripe)
@@ -51,8 +55,11 @@ arclen-app/
 │   │   └── common/               # Dots, Grid, etc.
 │   │
 │   ├── dashboard/                # 🏠 Composants dashboard (shadcn)
-│   │   ├── user-button.tsx       # Avatar + dropdown (SWR)
-│   │   └── sidebar.tsx           # Navigation sidebar
+│   │   ├── app-sidebar.tsx       # Sidebar navigation principale
+│   │   └── nav-user.tsx          # User menu avec avatar + dropdown
+│   │
+│   ├── docs/                     # 📚 Composants documentation
+│   │   └── docs-sidebar.tsx      # Sidebar docs (Aceternity hover style)
 │   │
 │   └── ui/                       # 🧩 shadcn primitives
 │       ├── button.tsx
@@ -102,7 +109,7 @@ arclen-app/
 
 ### `app/` - Next.js App Router
 
-#### Route Groups : `(marketing)`, `(login)`, `(dashboard)`
+#### Route Groups : `(marketing)`, `(login)`, `(dashboard)`, `(docs)`
 
 Les parenthèses `()` créent des **route groups** sans affecter l'URL.
 
@@ -115,6 +122,7 @@ Les parenthèses `()` créent des **route groups** sans affecter l'URL.
 ```
 app/(marketing)/pricing/page.tsx  → URL: /pricing
 app/(dashboard)/settings/page.tsx → URL: /settings
+app/(docs)/docs/quick-start/page.tsx → URL: /docs/quick-start
 ```
 
 #### `app/(marketing)/` - Pages publiques
@@ -177,6 +185,27 @@ if (!token && isDashboardRoute) {
 
 ---
 
+#### `app/(docs)/` - Documentation publique
+
+**Design system** : Aceternity-inspired sidebar + Tailwind Typography
+**Layout** : [app/(docs)/layout.tsx](../../../app/(docs)/layout.tsx)
+**Composants** : `components/docs/`
+
+**Pages** :
+- `/docs` - Introduction
+- `/docs/quick-start` - Guide de démarrage
+- `/docs/excel-bulk` - Documentation Excel AI Bulk
+- `/docs/excel-audit` - Documentation Excel AI Audit
+- `/docs/powerpoint-audit` - Documentation PowerPoint AI Audit
+
+**Particularités** :
+- Sidebar sticky avec hover animations (style Aceternity)
+- Navigation responsive (drawer sur mobile)
+- Contenu formaté avec `prose` (Tailwind Typography)
+- Navigation prev/next en bas de chaque page
+
+---
+
 #### `app/api/` - API Routes
 
 **Endpoints** :
@@ -215,6 +244,7 @@ export async function GET(request: Request) {
 |---------|---------------|-------|
 | `components/marketing/` | Aceternity UI Pro | Pages publiques `(marketing)` |
 | `components/dashboard/` | shadcn UI | Dashboard `(dashboard)` |
+| `components/docs/` | Aceternity-inspired | Documentation `(docs)` |
 | `components/ui/` | shadcn primitives | Partout (boutons, cards, etc.) |
 
 #### `components/marketing/` - Aceternity
@@ -246,47 +276,66 @@ export const HeroSection = () => {
 
 ---
 
-#### `components/dashboard/` - shadcn custom
+#### `components/dashboard/` - Dashboard custom
 
 **Composants clés** :
-- `user-button.tsx` - Avatar + dropdown (utilise SWR)
-- `sidebar.tsx` - Navigation sidebar
+- `nav-user.tsx` - User menu avec avatar + dropdown (SWR)
 
-**Pattern UserButton** :
+**Note** : Le sidebar est défini dans `components/ui/collapsible-sidebar.tsx` (Aceternity) et utilisé directement dans `app/(dashboard)/layout.tsx`.
+
+**Pattern NavUser** :
 ```typescript
 import useSWR from "swr";
+import { useSidebar } from "@/components/ui/collapsible-sidebar";
 
-export const UserButton = () => {
-  const { data: user } = useSWR("/api/user", fetcher);
+export function NavUser() {
+  const { open } = useSidebar();
+  const { data: user } = useSWR<User>("/api/user", fetcher);
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Avatar>{user?.name}</Avatar>
-      </DropdownMenuTrigger>
-    </DropdownMenu>
-  );
-};
+  // Avatar + dropdown avec Account, Settings, Log out
+  // Adapte affichage selon état sidebar (open/closed)
+}
 ```
 
-**Important** : UserButton DOIT être wrappé dans Suspense (Next.js 16 Cache Components)
+**Dashboard Layout** :
+```typescript
+// app/(dashboard)/layout.tsx
+// Utilise Aceternity collapsible-sidebar avec Motion animations
+import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/collapsible-sidebar";
+
+function DashboardSidebar() {
+  const [open, setOpen] = useState(true);
+  return (
+    <Sidebar open={open} setOpen={setOpen}>
+      <SidebarBody>
+        <Logo open={open} />  {/* Logo complet ou favicon */}
+        {/* Navigation links */}
+        <NavUser />
+      </SidebarBody>
+    </Sidebar>
+  );
+}
+```
 
 ---
 
-#### `components/ui/` - shadcn primitives
+#### `components/ui/` - UI primitives
 
-Composants installés via CLI :
+Composants shadcn installés via CLI :
 ```bash
 pnpm dlx shadcn@latest add button card dropdown-menu
 ```
 
-**Tous les composants** :
+**Composants shadcn** :
 - `button.tsx`
 - `card.tsx`
 - `dropdown-menu.tsx`
 - `input.tsx`
 - `label.tsx`
 - etc.
+
+**Composant Aceternity** :
+- `collapsible-sidebar.tsx` - Sidebar dashboard avec animations Motion
 
 **Configuration** : [components.json](../../../components.json)
 
