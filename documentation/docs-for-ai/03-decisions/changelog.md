@@ -10,6 +10,54 @@ Ce fichier contient l'historique chronologique de tous les changements significa
 
 ---
 
+## 2025-12-16 - Déploiement Vercel + Fix Next.js 16 prerendering
+
+**Contexte** : Premier déploiement en production sur Vercel avec domaine custom `arclen.app`. Build échouait à cause de `cacheComponents` incompatible avec `next-themes`.
+
+**Problème** :
+- `cacheComponents: true` dans Next.js 16 active un prerendering strict
+- `next-themes` (ThemeProvider) accède aux cookies pendant le prerender
+- Erreur : "Uncached data was accessed outside of <Suspense>"
+
+**Solution** :
+1. Désactivé `cacheComponents` dans `next.config.ts` (feature expérimentale)
+2. Restructuré dashboard layout : server component (layout.tsx) + client component (dashboard-shell.tsx)
+3. Ajouté `connection()` aux pages dashboard pour forcer le rendu dynamique
+4. Déplacé SWR prefetch du root layout vers le dashboard layout
+
+**Changements** :
+- `next.config.ts` : commenté `cacheComponents: true`
+- `app/(dashboard)/layout.tsx` : server component avec `cookies()` + Suspense
+- `components/dashboard/dashboard-shell.tsx` : nouveau client component (sidebar + shell)
+- `components/dashboard/swr-provider.tsx` : nouveau provider SWR client
+- `app/(dashboard)/dashboard/activity/page.tsx` : ajouté `connection()`
+- `app/(dashboard)/subscription/page.tsx` : ajouté `connection()`
+- `app/layout.tsx` : retiré SWR fallback (déplacé vers dashboard)
+
+**Configuration Vercel** :
+- Domaine : `arclen.app`
+- Variables d'environnement : `POSTGRES_URL`, `AUTH_SECRET`, `BASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- Webhook Stripe : `https://arclen.app/api/stripe/webhook`
+
+**Configuration Cloudflare DNS** :
+- A record : `@` → `216.198.79.1` (DNS only)
+- CNAME : `www` → `cname.vercel-dns.com` (DNS only)
+
+**Impact** : Site déployé en production, build passe, pages statiques prerendues, pages dynamiques (dashboard) rendues à la demande.
+
+**Fichiers créés** :
+- [components/dashboard/dashboard-shell.tsx](../../../components/dashboard/dashboard-shell.tsx)
+- [components/dashboard/swr-provider.tsx](../../../components/dashboard/swr-provider.tsx)
+
+**Fichiers modifiés** :
+- [next.config.ts](../../../next.config.ts)
+- [app/layout.tsx](../../../app/layout.tsx)
+- [app/(dashboard)/layout.tsx](../../../app/(dashboard)/layout.tsx)
+- [app/(dashboard)/dashboard/activity/page.tsx](../../../app/(dashboard)/dashboard/activity/page.tsx)
+- [app/(dashboard)/subscription/page.tsx](../../../app/(dashboard)/subscription/page.tsx)
+
+---
+
 ## 2025-12-15 - Migration Dashboard Sidebar vers Aceternity
 
 **Contexte** : Le dashboard utilisait le sidebar shadcn par défaut. Migration vers un sidebar Aceternity collapsible avec animations Motion pour cohérence avec le design marketing.

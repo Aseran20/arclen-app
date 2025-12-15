@@ -432,4 +432,124 @@ pnpm dev --port 3001
 
 ---
 
-*Dernière mise à jour : 2025-12-15*
+---
+
+## 🚀 Étape 6 : Déploiement Vercel (Production)
+
+### 6.1 Prérequis
+
+- Compte Vercel (gratuit) : https://vercel.com
+- Compte Cloudflare (si domaine custom)
+- Domaine acheté (optionnel)
+
+### 6.2 Connexion du repo GitHub
+
+1. Va sur [vercel.com/new](https://vercel.com/new)
+2. Importe ton repo GitHub `arclen-app`
+3. Vercel détecte automatiquement Next.js
+
+### 6.3 Variables d'environnement
+
+Sur Vercel → Settings → Environment Variables, ajoute :
+
+| Variable | Valeur |
+|----------|--------|
+| `POSTGRES_URL` | Ta connection string Neon |
+| `AUTH_SECRET` | Même clé JWT que local |
+| `BASE_URL` | `https://tondomaine.com` |
+| `STRIPE_SECRET_KEY` | `sk_test_...` (test) ou `sk_live_...` (prod) |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret du webhook prod |
+
+### 6.4 Domaine custom (Cloudflare)
+
+**Sur Vercel** :
+1. Settings → Domains → Add domain
+2. Note les DNS records fournis
+
+**Sur Cloudflare** (DNS → Records) :
+
+| Type | Name | Content | Proxy |
+|------|------|---------|-------|
+| A | `@` | `76.76.21.21` | DNS only (gris) |
+| CNAME | `www` | `cname.vercel-dns.com` | DNS only (gris) |
+
+> **Important** : Proxy en mode "DNS only" (icône grise) pour éviter conflits SSL.
+
+### 6.5 Webhook Stripe production
+
+1. [dashboard.stripe.com](https://dashboard.stripe.com) → Developers → Webhooks
+2. Add endpoint : `https://tondomaine.com/api/stripe/webhook`
+3. Events à sélectionner :
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+4. Copie le Signing secret → ajoute dans Vercel comme `STRIPE_WEBHOOK_SECRET`
+
+### 6.6 Tester le build localement
+
+Avant de push, vérifie que le build passe :
+
+```bash
+pnpm build
+```
+
+**Output attendu** :
+```
+Route (app)
+├ ○ /              (Static)
+├ ○ /pricing       (Static)
+├ ƒ /dashboard     (Dynamic)
+├ ƒ /api/stripe/*  (Dynamic)
+```
+
+### 6.7 Déployer
+
+**Option A** : Push sur main (auto-deploy)
+```bash
+git push origin main
+```
+
+**Option B** : Via CLI
+```bash
+npm i -g vercel
+vercel --prod
+```
+
+### 6.8 Vérification post-déploiement
+
+- [ ] Site accessible sur le domaine
+- [ ] Pages marketing chargent rapidement
+- [ ] Sign in fonctionne
+- [ ] Dashboard accessible après login
+- [ ] Webhook Stripe reçoit les events (check dashboard Stripe)
+
+---
+
+## ⚠️ Notes Next.js 16 + Vercel
+
+### cacheComponents désactivé
+
+Le projet a `cacheComponents` commenté dans `next.config.ts` car incompatible avec `next-themes`. Réactiver quand Next.js 16 sera stable.
+
+### Pages dynamiques
+
+Les pages dashboard utilisent `connection()` de `next/server` pour forcer le rendu dynamique :
+
+```typescript
+import { connection } from 'next/server';
+
+export default async function Page() {
+  await connection(); // Force dynamic rendering
+  // ...
+}
+```
+
+### Structure layout dashboard
+
+Le dashboard utilise un pattern server/client split :
+- `app/(dashboard)/layout.tsx` : Server component (exports, Suspense)
+- `components/dashboard/dashboard-shell.tsx` : Client component (hooks, UI)
+
+---
+
+*Dernière mise à jour : 2025-12-16*
