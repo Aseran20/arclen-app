@@ -1,10 +1,15 @@
 import { Suspense } from 'react';
-import { Login } from '../login';
+import { AuthForm } from '@/components/marketing/auth-form';
+import { DivideX } from '@/components/marketing/divide';
 
 export default function SignUpPage() {
   return (
-    <Suspense>
-      <Login mode="signup" />
-    </Suspense>
+    <main>
+      <DivideX />
+      <Suspense>
+        <AuthForm mode="signup" />
+      </Suspense>
+      <DivideX />
+    </main>
   );
 }

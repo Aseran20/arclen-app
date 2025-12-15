@@ -1,10 +1,15 @@
 import { Suspense } from 'react';
-import { Login } from '../login';
+import { AuthForm } from '@/components/marketing/auth-form';
+import { DivideX } from '@/components/marketing/divide';
 
 export default function SignInPage() {
   return (
-    <Suspense>
-      <Login mode="signin" />
-    </Suspense>
+    <main>
+      <DivideX />
+      <Suspense>
+        <AuthForm mode="signin" />
+      </Suspense>
+      <DivideX />
+    </main>
   );
 }

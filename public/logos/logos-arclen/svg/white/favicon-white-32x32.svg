@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="65.89" height="65.099" xmlns:bx="https://boxy-svg.com" viewBox="-225.173 36.262 65.89 65.099">
+  <defs>
+    <bx:export>
+      <bx:file format="png"/>
+    </bx:export>
+  </defs>
+  <path d="M 192.199 -101.7 L 224.899 -36.3 L 159.499 -36.3 L 192.199 -101.7 Z" bx:shape="triangle 159.499 -101.7 65.4 65.4 0.5 0 1@231e3a97" style="stroke: rgb(0, 0, 0); stroke-opacity: 0; stroke-width: 1; fill: rgb(255, 255, 255); transform-origin: 192.199px -69.001px;" transform="matrix(-1, 0, 0, -1, -384.39828491, 138.00253296)"/>
+</svg>
